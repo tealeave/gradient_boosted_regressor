@@ -18,7 +18,7 @@ import contextlib
 import shap
 
 # Parameters
-DELDUP_XLSX = 'mdf.xlsx'
+DELDUP_XLSX = '../mdf.xlsx'
 TARGET_COL = "#inrun_deldup_calls"
 FEATURES_TO_REMOVE = ['#deldup1st_calls', 'Yield(Mbases)', 'Clusters', 'pcr_dup_rate', 'Mean Quality Score']
 IQR_MULTI = 2
