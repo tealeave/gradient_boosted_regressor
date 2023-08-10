@@ -1,8 +1,7 @@
 """
-Script for training a Gradient Boosted Regressor model on deldup data.
+Script for training a Gradient Boosted Regressor model to capture the feature that contributes to 
+high CNV num in a sample, which is likely to be false positives. 
 
-Data Source: 
-The data used in this script is assumed to be obtained internally and not specified.
 """
 
 import pandas as pd
@@ -115,18 +114,33 @@ def plot_shap_values(model, X_test, feature_cols):
     plt.savefig("shap_plot.png")
     plt.clf()
 
+def save_model(model, filename):
+    """Saves the model to a file using pickle."""
+    with open(filename, "wb") as f:
+        pickle.dump(model, f)
+
 def run():
-    """Main execution function."""
     start_time = time.time()
 
-    # Load data and train the model
+    # Load and process data
     df = load_data(DELDUP_XLSX)
-    model, feature_cols = train_gradient_boost_with_iqr_filter(df, TARGET_COL, iqr_filter_col=None, iqr_range=IQR_MULTI, drop_cols=FEATURES_TO_REMOVE)
+    df = df[['Yield(Mbases)', 'Clusters', '% >= Q30 bases', 'Mean Quality Score', 'specificity', 
+             'pcr_dup_rate', 'X100', 'mean_coverage', '#deldup1st_calls', '#inrun_deldup_calls',
+             '#nolocos', 'read_count', 'cv_mad_iqr', 'pearson']]
 
-    # Plot and save model fit, feature importance and SHAP values
-    plot_model_fit(y_test, model.predict(X_test), "GradientBoostingRegressor")
+    # Train model
+    model, feature_cols = train_gradient_boost_with_iqr_filter(df, TARGET_COL, drop_cols=FEATURES_TO_REMOVE, iqr_range=IQR_MULTI)
+
+    # Plot results
     plot_feature_importance(model, feature_cols)
-    plot_shap_values(model, X_test, feature_cols)
+    plot_shap_values(model, df[feature_cols].values, feature_cols)
+
+    # Save model
+    save_model(model, "gradient_model.pkl")
 
     end_time = time.time()
-    print(f"Execution time: {end_time - start
+    elapsed_time = end_time - start_time
+    print(f"Execution time: {elapsed_time:.2f} seconds")
+
+if __name__ == "__main__":
+    run()
